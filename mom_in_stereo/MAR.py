@@ -47,7 +47,7 @@ def remap_MAR_velocities_to_MOM6(
     ds_mom6 = MOM6_hgrid_to_xesmf(grid_mom6)
 
     # create the remapping weights
-    remap = xesmf.Regridder(ds_MAR, ds_mom6, remap_method, periodic=False)
+    remap = xesmf.Regridder(ds_MAR, ds_mom6, remap_method, periodic=False, unmapped_to_nan=True, extrap_method="nearest_s2d")
 
     # rotate MAR vectors to E-W/N-S, still on MAR grid (suffix)
     uEW_MAR, vNS_MAR = rotate_stereo_to_EW(
