@@ -14,6 +14,7 @@ def remap_scalar_to_MOM6(
     ygrid="y",
     remap_method="bilinear",
     projection=PROJSTRING,
+    use_included_lonlat=False,
 ):
     """remap scalar from stereographic to MOM6 grid
 
@@ -34,10 +35,25 @@ def remap_scalar_to_MOM6(
         ESMF remapping scheme to use. Defaults to "bilinear"
     projection: str
         PROJSTRING to use for input stereographic grid
+    use_included_lonlat: logical
+        if True, use lon/lat included in dataset with names set
+        by xgrid/ygrid to avoid recomputing arrays.
     """
 
-    # create lon/lat arrays for MAR grid
-    ds = add_lon_lat(ds, projection, x=xgrid, y=ygrid, units=units_grid)
+    if use_included_lonlat:
+        if len(ds[xgrid].values.shape) != 2:
+            raise ValueError("included lon/lat are expected to be 2d arrays")
+        # rename coords if needed
+        if xgrid != "lon":
+            ds["lon"] = xr.DataArray(data=ds[xgrid].values, dims=("y", "x"))
+        if ygrid != "lat"
+            ds["lat"] = xr.DataArray(data=ds[ygrid].values, dims=("y", "x"))
+        # give proper units
+        ds["lon"].attrs = dict(units="degrees_east")
+        ds["lat"].attrs = dict(units="degrees_north")
+    else:
+        # create lon/lat arrays for MAR grid
+        ds = add_lon_lat(ds, projection, x=xgrid, y=ygrid, units=units_grid)
 
     # create xESMF-friendly version of MOM6 grid
     ds_mom6 = MOM6_hgrid_to_xesmf(grid_mom6)
